@@ -11,8 +11,8 @@ def main():
     sock.bind((BRIDGE_IP, SIM_PORT))
     sock.settimeout(1.0)
 
-    print(f"Sim tester running on {BRIDGE_IP}:{SIM_PORT}")
-    print(f"Sending to bridge on {BRIDGE_IP}:{BRIDGE_PORT}")
+    print(f"Test running at {BRIDGE_IP}:{SIM_PORT}")
+    print(f"Sending to bridge at {BRIDGE_IP}:{BRIDGE_PORT}")
     print("-" * 40)
 
     count = 0
@@ -29,6 +29,8 @@ def main():
                 print(f"[RX] Received: {data.hex()} ({len(data)} bytes) from {addr}")
             except socket.timeout:
                 print("[RX] No data received")
+            except ConnectionResetError:
+                print("[RX] Bridge not reachable (connection reset)")
 
             count += 1
             time.sleep(1.0)
