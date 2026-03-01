@@ -1,60 +1,49 @@
+#include "udp_socket.hpp"
+#include "serial_port.hpp"
 #include <iostream>
 #include <stdio.h>
-#include <WinSock2.h>
 #include <string.h>
 
+// UDP
+constexpr int           BRIDGE_PORT = 5000;
+constexpr int           SIM_PORT    = 5001;
+// Serial
+constexpr const char*   COM_PORT    = "COM3";
+constexpr int           BAUD_RATE   = 115200;
 
-#pragma comment(lib,"WS2_32")
+int main() {
 
-int main()
-{
-    int iResult = 1;
+    // Boilerplate WinSock implementation
     WSADATA wsaData;
-    int res = WSAStartup(MAKEWORD(2, 2), &wsaData);
-    if (res != NO_ERROR) {
-        printf("WSAStartup failed with error %d\n", iResult);
-        return 1;
-    }
+    WSAStartup(MAKEWORD(2, 2), &wsaData);
 
-    SOCKET Socket = INVALID_SOCKET;
-    Socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    if (Socket == INVALID_SOCKET) {
-        printf("socket failed %d\n", WSAGetLastError());
-    }
+    // Open UDP socket
+    UDPSocket udp;
+    udp.bind("127.0.0.1", BRIDGE_PORT);
+    udp.setDestination("127.0.0.1", SIM_PORT);
 
-    struct sockaddr_in Addr;
-    short port = 27015;
+    // Open serial port
+    SerialPort serial;
+    serial.open(COM_PORT, BAUD_RATE);
 
-    Addr.sin_family = AF_INET;
-    Addr.sin_port = htons(port);
+    char buffer[256];
 
-    Addr.sin_addr.s_addr = INADDR_ANY;
-
-    if (bind(Socket, (SOCKADDR*)&Addr, sizeof(Addr))) {
-        printf("Bind failed with error %d\n", WSAGetLastError());
-        return 1;
-    }
-
-    char buf[1024];
-    struct sockaddr_in senderAddr;
-    int senderSize = sizeof(senderAddr);
-
-    printf("Waiting for packets...\n");
     while (true) {
-        int bytesReceived = recvfrom(Socket, buf, sizeof(buf), 0, (SOCKADDR*)&senderAddr, &senderSize);
-        if (bytesReceived == SOCKET_ERROR) {
-            printf("Recvfrom failed %d\n", WSAGetLastError());
-            break;
+        // Sim -> Bridge -> ESP
+        int bytes = udp.receive(buffer, sizeof(buffer));
+        if (bytes > 0) {
+            serial.write(buffer, bytes);
         }
-        buf[bytesReceived] = '\0';
-        printf("Received: %s\n", buf);
-        char* found = strstr(buf, "\"x\":");
-        if (found) {
-            float x;
-            sscanf_s(found, "\"x\":%f", &x);
-            printf("x value: %f\n", x);
+
+        // ESP -> Bridge -> Sim
+        bytes = serial.read(buffer, sizeof(buffer));
+        if (bytes > 0) {
+            udp.send(buffer, bytes);
         }
     }
+
+    WSACleanup();
+    return 0;
 }
 
 
