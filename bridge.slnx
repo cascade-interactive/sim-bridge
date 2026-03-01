@@ -1,7 +1,0 @@
-<Solution>
-  <Configurations>
-    <Platform Name="x64" />
-    <Platform Name="x86" />
-  </Configurations>
-  <Project Path="bridge.vcxproj" Id="f94b89ba-5f4e-408a-9fc3-fda75bf9f2b5" />
-</Solution>
