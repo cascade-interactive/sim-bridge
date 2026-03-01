@@ -15,6 +15,7 @@
 *.vcxproj.filters
 *.vcxproj.user
 .vs/
+.vscode/
 Debug/
 Release/
 x64/
