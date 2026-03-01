@@ -19,7 +19,11 @@
 Debug/
 Release/
 x64/
+desktop/build
 *.xlsx
+*.vcxproj
+*.slnx
+
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs

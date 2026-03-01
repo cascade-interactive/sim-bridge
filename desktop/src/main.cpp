@@ -32,6 +32,7 @@ int main() {
         // Sim -> Bridge -> ESP
         int bytes = udp.receive(buffer, sizeof(buffer));
         if (bytes > 0) {
+            printf("Received packet!\n");
             serial.write(buffer, bytes);
         }
 
