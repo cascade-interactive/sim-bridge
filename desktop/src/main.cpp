@@ -50,13 +50,19 @@ void OnInboundUdp(const char* data, int size) {
 
     const PacketHeader* header = reinterpret_cast<const PacketHeader*>(data);
 
-    if (header->magic != PACKET_MAGIC) {        // 0x4C594E4E ("LYNN")
+    if (header->magic   !=  PACKET_MAGIC) {        // 0x4C594E4E ("LYNN")
         printf("ERROR: Incompatible magic.");   
         return;
     }
 
-    if (header->version != PACKET_VERSION) {    // 0x01;
+    if (header->version !=  PACKET_VERSION) {    // 0x01;
         printf("ERROR: Incompatible protocol version.");
+        return;
+    }
+
+    if (header->flags   ==  0x00) {
+        // Parse crc
+        printf("ERROR: Unable to parse CRC.");
         return;
     }
 

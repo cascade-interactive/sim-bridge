@@ -5,7 +5,8 @@ static constexpr uint32_t PACKET_MAGIC   = 0x4C594E4E; // "LYNN"
 static constexpr uint8_t  PACKET_VERSION = 0x01;
 
 enum class PacketFlags : uint8_t {
-    NONE        = 0x00, // Future proofing
+    NONE        = 0x00, 
+    IGNORE_CRC  = 0x01
 };
 
 #pragma pack(push, 1)
@@ -20,7 +21,7 @@ struct PacketHeader {
 struct Packet {
     PacketHeader header;
     uint8_t*     payload; // 'header.length' bytes
-    uint32_t     crc;     // CRC32 over header + payload
+    uint32_t     crc;     // CRC32 over payload
 };
 
 // ──────────────────── Actuator command (UDP OUT) ──────────────────────────────
