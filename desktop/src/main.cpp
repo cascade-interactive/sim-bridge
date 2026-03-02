@@ -1,15 +1,12 @@
+#include "main.hpp"
+
 #include "udp_socket.hpp"
 #include "serial_port.hpp"
+#include "sim_packet.hpp"
+
 #include <iostream>
 #include <stdio.h>
 #include <string.h>
-
-// UDP
-constexpr int           BRIDGE_PORT = 5000;
-constexpr int           SIM_PORT    = 5001;
-// Serial
-constexpr const char*   COM_PORT    = "COM3";
-constexpr int           BAUD_RATE   = 115200;
 
 int main() {
 
@@ -31,20 +28,51 @@ int main() {
     while (true) {
         // Sim -> Bridge -> ESP
         int bytes = udp.receive(buffer, sizeof(buffer));
-        if (bytes > 0) {
-            printf("Received packet!\n");
-            serial.write(buffer, bytes);
-        }
+        if (bytes > 0) OnInboundUdp(buffer, bytes);//{
+            //printf("Received packet!\n");
+            //serial.write(buffer, bytes);
+        //}
 
         // ESP -> Bridge -> Sim
         bytes = serial.read(buffer, sizeof(buffer));
-        if (bytes > 0) {
-            udp.send(buffer, bytes);
-        }
+        if (bytes > 0) OnInboundSerial(buffer, bytes);//{
+            //udp.send(buffer, bytes);
+        //}
     }
 
     WSACleanup();
     return 0;
 }
 
+void OnInboundUdp(const char* data, int size) {
 
+    if (size < sizeof(PacketHeader)) return;
+
+    const PacketHeader* header = reinterpret_cast<const PacketHeader*>(data);
+
+    if (header->magic != PACKET_MAGIC) {        // 0x4C594E4E ("LYNN")
+        printf("ERROR: Incompatible magic.");   
+        return;
+    }
+
+    if (header->version != PACKET_VERSION) {    // 0x01;
+        printf("ERROR: Incompatible protocol version.");
+        return;
+    }
+
+    printf("Magic:    0x%08X\n", header->magic);
+    printf("Version:  %u\n",     header->version);
+    printf("Length:   %u\n",     header->length);
+    printf("Flags:    0x%02X\n", header->flags);
+    printf("Sequence: %u\n",     header->sequence);
+
+    // data + sizeof(PacketHeader) is where payload starts
+    const TelemetryPayload* payload = reinterpret_cast<const TelemetryPayload*>(data + sizeof(PacketHeader));
+
+    printf("Sim Time: %.3f\n",  payload->sim_time_s);
+
+}
+
+void OnInboundSerial(const char* data, int size) {
+
+}
