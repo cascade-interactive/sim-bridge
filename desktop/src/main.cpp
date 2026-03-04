@@ -7,6 +7,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <string.h>
+#include <cstring> 
 
 int main() {
 
@@ -46,37 +47,81 @@ int main() {
 
 void OnInboundUdp(const char* data, int size) {
 
-    if (size < sizeof(PacketHeader)) return;
+    // Min size guard
+    if (size < (int)sizeof(PacketHeader)) {
 
-    const PacketHeader* header = reinterpret_cast<const PacketHeader*>(data);
-
-    if (header->magic   !=  PACKET_MAGIC) {        // 0x4C594E4E ("LYNN")
-        printf("ERROR: Incompatible magic.");   
+        printf("ERROR: Packet too small (%d bytes).\n", size);
         return;
     }
 
-    if (header->version !=  PACKET_VERSION) {    // 0x01;
-        printf("ERROR: Incompatible protocol version.");
+    PacketHeader header{};
+    std::memcpy(&header, data, sizeof(PacketHeader));
+
+    if (header.magic != PACKET_MAGIC) {
+        printf("ERROR: Bad magic 0x%08X (expected 0x%08X). \n", header.magic, PACKET_MAGIC);
         return;
     }
 
-    if (header->flags   ==  0x00) {
-        // Parse crc
-        printf("ERROR: Unable to parse CRC.");
+    if (header.version != PACKET_VERSION) {
+        printf("ERROR: Incompatible version %u (expected %u). \n", header.magic, PACKET_VERSION);
         return;
     }
 
-    printf("Magic:    0x%08X\n", header->magic);
-    printf("Version:  %u\n",     header->version);
-    printf("Length:   %u\n",     header->length);
-    printf("Flags:    0x%02X\n", header->flags);
-    printf("Sequence: %u\n",     header->sequence);
+    if ((int)header.length != size) {
+        printf("ERROR: Length mismatch (declared %u, received %d).\n", header.length, size);
+        return;
+    }
 
-    // data + sizeof(PacketHeader) is where payload starts
-    const TelemetryPayload* payload = reinterpret_cast<const TelemetryPayload*>(data + sizeof(PacketHeader));
+    printf("Magic:    0x%08X\n", header.magic);
+    printf("Version:  %u\n",     header.version);
+    printf("Length:   %u\n",     header.length);
+    printf("Flags:    0x%02X\n", header.flags);
+    printf("Sequence: %u\n",     header.sequence);
 
-    printf("Sim Time: %.3f\n",  payload->sim_time_s);
+    // Payload
+    const size_t payloadOffset = sizeof(PacketHeader);
+    const size_t payloadSize   = size - payloadOffset;
 
+    if (payloadSize < sizeof(TelemetryPayload)) {
+        printf("ERROR: Payload too small (%zu bytes, need %zu).\n",
+               payloadSize, sizeof(TelemetryPayload));
+        return;
+    }
+
+    TelemetryPayload payload{};
+    std::memcpy(&payload, data + payloadOffset, sizeof(TelemetryPayload));
+
+    printf("Sim Time: %.3f\n", payload.sim_time_s);
+
+    //const PacketHeader* header = reinterpret_cast<const PacketHeader*>(data);
+//
+    //if (header->magic   !=  PACKET_MAGIC) {        // 0x4C594E4E ("LYNN")
+    //    printf("ERROR: Incompatible magic.");   
+    //    return;
+    //}
+//
+    //if (header->version !=  PACKET_VERSION) {    // 0x01;
+    //    printf("ERROR: Incompatible protocol version.");
+    //    return;
+    //}
+//
+    //if (header->flags   ==  0x00) {
+    //    // Parse crc
+    //    printf("ERROR: Unable to parse CRC.");
+    //    return;
+    //}
+//
+    //printf("Magic:    0x%08X\n", header->magic);
+    //printf("Version:  %u\n",     header->version);
+    //printf("Length:   %u\n",     header->length);
+    //printf("Flags:    0x%02X\n", header->flags);
+    //printf("Sequence: %u\n",     header->sequence);
+//
+    //// data + sizeof(PacketHeader) is where payload starts
+    //const TelemetryPayload* payload = reinterpret_cast<const TelemetryPayload*>(data + sizeof(PacketHeader));
+//
+    //printf("Sim Time: %.3f\n",  payload->sim_time_s);
+//
 }
 
 void OnInboundSerial(const char* data, int size) {
