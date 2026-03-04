@@ -24,6 +24,8 @@ int main() {
     SerialPort serial;
     serial.open(COM_PORT, BAUD_RATE);
 
+    intro();
+
     char buffer[256];
 
     while (true) {
@@ -48,11 +50,7 @@ int main() {
 void OnInboundUdp(const char* data, int size) {
 
     // Min size guard
-    if (size < (int)sizeof(PacketHeader)) {
-
-        printf("ERROR: Packet too small (%d bytes).\n", size);
-        return;
-    }
+    if (size < sizeof(PacketHeader)) return;
 
     PacketHeader header{};
     std::memcpy(&header, data, sizeof(PacketHeader));
@@ -67,8 +65,9 @@ void OnInboundUdp(const char* data, int size) {
         return;
     }
 
-    if ((int)header.length != size) {
-        printf("ERROR: Length mismatch (declared %u, received %d).\n", header.length, size);
+    const int expectedSize = (int)(sizeof(PacketHeader) + header.length + sizeof(uint32_t)); // header + payload + crc32
+    if (expectedSize != size) {
+        printf("ERROR: Length mismatch (expected %d, received %d).\n", expectedSize, size);
         return;
     }
 
@@ -80,9 +79,9 @@ void OnInboundUdp(const char* data, int size) {
 
     // Payload
     const size_t payloadOffset = sizeof(PacketHeader);
-    const size_t payloadSize   = size - payloadOffset;
+    const size_t payloadSize   = size - payloadOffset; 
 
-    if (payloadSize < sizeof(TelemetryPayload)) {
+    if (payloadSize + sizeof(VisualPayload) < sizeof(TelemetryPayload)) {   // TEMP: Figure out what to do once i have a concrete protocol
         printf("ERROR: Payload too small (%zu bytes, need %zu).\n",
                payloadSize, sizeof(TelemetryPayload));
         return;
@@ -126,4 +125,18 @@ void OnInboundUdp(const char* data, int size) {
 
 void OnInboundSerial(const char* data, int size) {
 
+}
+
+void intro() {
+
+    printf(
+"    ____  ____  ________  ____________\n"
+"   / __ )/ __ \\/  _/ __ \\/ ____/ ____/\n"
+"  / __  / /_/ // // / / / / __/ __/   \n"
+" / /_/ / _, _// // /_/ / /_/ / /___   \n"
+"/_____/_/ |_/___/_____/\\____/_____/   \n"
+"                                      \n"
+);
+
+    printf("Version 0.0.0 alpha 1\n\nAwaiting packets...\n");
 }

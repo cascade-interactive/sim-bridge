@@ -64,6 +64,28 @@ struct TelemetryPayload {
     float fuel_remaining_pct;           // 0.0 – 1.0
 };
 
+// ──────────────────── Visual Payload  (Bridge Ignore) ────────────────────────────
+struct VisualPayload {
+    double sim_time_s;
+
+    // world NED position from launch point (m)
+    float pos_n_m;
+    float pos_e_m;
+    float pos_d_m;
+
+    // orientation quaternion (body->world, Hamilton, scalar-first)
+    float quat_w, quat_x, quat_y, quat_z;
+
+    // actuator state (deg)
+    float tvc_pitch_deg;
+    float tvc_yaw_deg;
+    float canard_roll_deg;
+
+    // engine state
+    float thrust_n;
+    float fuel_remaining_pct; // 0.0 - 1.0
+};
+
 #pragma pack(pop)
 
 // ──────────────────── Packet-type identifiers ────────────────────────────────

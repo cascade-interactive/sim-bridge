@@ -11,5 +11,7 @@ constexpr const char*   COM_PORT    = "COM3";
 constexpr int           BAUD_RATE   = 115200;
 
 // Handlers
+void intro();
+
 void OnInboundUdp(const char* data, int size);
 void OnInboundSerial(const char* data, int size);

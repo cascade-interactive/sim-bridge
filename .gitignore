@@ -17,6 +17,7 @@
 .vs/
 .vscode/
 Debug/
+build/
 Release/
 x64/
 desktop/build
