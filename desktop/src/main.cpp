@@ -9,11 +9,11 @@
 #include <string.h>
 #include <cstring> 
 
-int main() {
+#ifdef _WIN32
+    #include <windows.h>
+#endif
 
-    // Boilerplate WinSock implementation
-    WSADATA wsaData;
-    WSAStartup(MAKEWORD(2, 2), &wsaData);
+int main(int argc, char* argv[]) {
 
     // Open UDP socket
     UDPSocket udp;
@@ -43,7 +43,6 @@ int main() {
         //}
     }
 
-    WSACleanup();
     return 0;
 }
 
@@ -92,35 +91,6 @@ void OnInboundUdp(const char* data, int size) {
 
     printf("Sim Time: %.3f\n", payload.sim_time_s);
 
-    //const PacketHeader* header = reinterpret_cast<const PacketHeader*>(data);
-//
-    //if (header->magic   !=  PACKET_MAGIC) {        // 0x4C594E4E ("LYNN")
-    //    printf("ERROR: Incompatible magic.");   
-    //    return;
-    //}
-//
-    //if (header->version !=  PACKET_VERSION) {    // 0x01;
-    //    printf("ERROR: Incompatible protocol version.");
-    //    return;
-    //}
-//
-    //if (header->flags   ==  0x00) {
-    //    // Parse crc
-    //    printf("ERROR: Unable to parse CRC.");
-    //    return;
-    //}
-//
-    //printf("Magic:    0x%08X\n", header->magic);
-    //printf("Version:  %u\n",     header->version);
-    //printf("Length:   %u\n",     header->length);
-    //printf("Flags:    0x%02X\n", header->flags);
-    //printf("Sequence: %u\n",     header->sequence);
-//
-    //// data + sizeof(PacketHeader) is where payload starts
-    //const TelemetryPayload* payload = reinterpret_cast<const TelemetryPayload*>(data + sizeof(PacketHeader));
-//
-    //printf("Sim Time: %.3f\n",  payload->sim_time_s);
-//
 }
 
 void OnInboundSerial(const char* data, int size) {
@@ -129,14 +99,17 @@ void OnInboundSerial(const char* data, int size) {
 
 void intro() {
 
-    printf(
-"    ____  ____  ________  ____________\n"
-"   / __ )/ __ \\/  _/ __ \\/ ____/ ____/\n"
-"  / __  / /_/ // // / / / / __/ __/   \n"
-" / /_/ / _, _// // /_/ / /_/ / /___   \n"
-"/_____/_/ |_/___/_____/\\____/_____/   \n"
-"                                      \n"
-);
+#ifdef _WIN32
+    SetConsoleOutputCP(65001); // UTF-8
+#endif
 
-    printf("Version 0.0.0 alpha 1\n\nAwaiting packets...\n");
+    printf(
+    "██████╗ ██████╗ ██╗██████╗  ██████╗ ███████╗    \n"
+    "██╔══██╗██╔══██╗██║██╔══██╗██╔════╝ ██╔════╝    \n"
+    "██████╔╝██████╔╝██║██║  ██║██║  ███╗█████╗      \n"
+    "██╔══██╗██╔══██╗██║██║  ██║██║   ██║██╔══╝      \n"
+    "██████╔╝██║  ██║██║██████╔╝╚██████╔╝███████╗    \n"
+    "╚═════╝ ╚═╝  ╚═╝╚═╝╚═════╝  ╚═════╝ ╚══════╝    \n");
+
+    printf("Version 0.0.0 Alpha 1\n\nAwaiting packets...\n");
 }
